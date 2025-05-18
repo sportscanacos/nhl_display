@@ -1,37 +1,70 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <style>
-      body {
-        font-family: Arial, sans-serif;
-        color: white;
-        background: transparent;
-        font-size: 24px;
-      }
-    </style>
-  </head>
-  <body>
-    <div id="score">Loading...</div>
-    <script>
-      async function fetchScore() {
-        const res = await fetch("https://statsapi.web.nhl.com/api/v1/game/2024020327/feed/live");
+<head>
+  <meta charset="UTF-8" />
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+      color: white;
+      background: transparent;
+      font-size: 24px;
+      text-align: center;
+    }
+    #scorebox {
+      padding: 10px;
+      background: rgba(0, 0, 0, 0.6);
+      border-radius: 12px;
+      display: inline-block;
+    }
+  </style>
+</head>
+<body>
+  <div id="scorebox">Loading score...</div>
+
+  <script>
+    const gameID = "2024020327"; // Leafs vs Panthers Game 7
+    const url = `https://statsapi.web.nhl.com/api/v1/game/${gameID}/feed/live`;
+
+    async function fetchScore() {
+      try {
+        const res = await fetch(url);
         const data = await res.json();
 
         const home = data.gameData.teams.home.abbreviation;
         const away = data.gameData.teams.away.abbreviation;
-        const homeScore = data.liveData.linescore.teams.home.goals;
-        const awayScore = data.liveData.linescore.teams.away.goals;
-        const period = data.liveData.linescore.currentPeriodOrdinal;
-        const clock = data.liveData.linescore.currentPeriodTimeRemaining;
 
-        document.getElementById("score").innerHTML = `
-          ${away} ${awayScore} - ${home} ${homeScore}<br>
-          Period: ${period} | Time: ${clock}
-        `;
+        const status = data.gameData.status.abstractGameState; // Preview, Live, Final
+        const linescore = data.liveData.linescore;
+
+        let display = "";
+
+        if (status === "Preview") {
+          display = `${away} vs ${home}<br>Game not started`;
+        } else if (status === "Live") {
+          const awayScore = linescore.teams.away.goals;
+          const homeScore = linescore.teams.home.goals;
+          const period = linescore.currentPeriodOrdinal;
+          const clock = linescore.currentPeriodTimeRemaining;
+          display = `${away} ${awayScore} - ${home} ${homeScore}<br>${period} | ${clock}`;
+        } else if (status === "Final") {
+          const awayScore = linescore.teams.away.goals;
+          const homeScore = linescore.teams.home.goals;
+          display = `${away} ${awayScore} - ${home} ${homeScore}<br>Final`;
+        } else {
+          display = "Game status unknown";
+        }
+
+        document.getElementById("scorebox").innerHTML = display;
+      } catch (err) {
+        document.getElementById("scorebox").innerHTML = "Error loading data.";
+        console.error("Fetch failed", err);
       }
+    }
 
-      setInterval(fetchScore, 5000);
-      fetchScore();
-    </script>
-  </body>
+    fetchScore();
+    setInterval(fetchScore, 10000); // update every 10 seconds
+  </script>
+</body>
 </html>

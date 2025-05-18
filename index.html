@@ -29,14 +29,15 @@
 
     async function fetchScore() {
       try {
-        const res = await fetch(url);
-        const data = await res.json();
+        const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
+        const res = await fetch(proxyUrl);
+        const parsed = JSON.parse(res.ok ? JSON.parse(await res.text()).contents : '{}');
 
-        const home = data.gameData.teams.home.abbreviation;
-        const away = data.gameData.teams.away.abbreviation;
+        const home = parsed.gameData.teams.home.abbreviation;
+        const away = parsed.gameData.teams.away.abbreviation;
 
-        const status = data.gameData.status.abstractGameState; // Preview, Live, Final
-        const linescore = data.liveData.linescore;
+        const status = parsed.gameData.status.abstractGameState;
+        const linescore = parsed.liveData.linescore;
 
         let display = "";
 
@@ -47,24 +48,4 @@
           const homeScore = linescore.teams.home.goals;
           const period = linescore.currentPeriodOrdinal;
           const clock = linescore.currentPeriodTimeRemaining;
-          display = `${away} ${awayScore} - ${home} ${homeScore}<br>${period} | ${clock}`;
-        } else if (status === "Final") {
-          const awayScore = linescore.teams.away.goals;
-          const homeScore = linescore.teams.home.goals;
-          display = `${away} ${awayScore} - ${home} ${homeScore}<br>Final`;
-        } else {
-          display = "Game status unknown";
-        }
-
-        document.getElementById("scorebox").innerHTML = display;
-      } catch (err) {
-        document.getElementById("scorebox").innerHTML = "Error loading data.";
-        console.error("Fetch failed", err);
-      }
-    }
-
-    fetchScore();
-    setInterval(fetchScore, 10000); // update every 10 seconds
-  </script>
-</body>
-</html>
+          display

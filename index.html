@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        color: white;
+        background: transparent;
+        font-size: 24px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="score">Loading...</div>
+    <script>
+      async function fetchScore() {
+        const res = await fetch("https://statsapi.web.nhl.com/api/v1/game/2024020327/feed/live");
+        const data = await res.json();
+
+        const home = data.gameData.teams.home.abbreviation;
+        const away = data.gameData.teams.away.abbreviation;
+        const homeScore = data.liveData.linescore.teams.home.goals;
+        const awayScore = data.liveData.linescore.teams.away.goals;
+        const period = data.liveData.linescore.currentPeriodOrdinal;
+        const clock = data.liveData.linescore.currentPeriodTimeRemaining;
+
+        document.getElementById("score").innerHTML = `
+          ${away} ${awayScore} - ${home} ${homeScore}<br>
+          Period: ${period} | Time: ${clock}
+        `;
+      }
+
+      setInterval(fetchScore, 5000);
+      fetchScore();
+    </script>
+  </body>
+</html>
